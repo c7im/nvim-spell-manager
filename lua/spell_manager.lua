@@ -33,7 +33,7 @@ function M.setup()
 
     vim.keymap.set("n", "zd", M.delete_word_from_spell, { noremap = true, silent = true })
     vim.keymap.set("n", "zg", M.add_word_auto, { noremap = true, silent = true })
-    vim.keymap.set("n", "<leader>si", M.add_word_to_ignore, { noremap = true, silent = true })
+    vim.keymap.set("n", "zi", M.add_word_to_ignore, { noremap = true, silent = true })
 end
 
 function M.delete_word_from_spell()
