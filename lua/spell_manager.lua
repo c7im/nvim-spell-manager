@@ -5,6 +5,7 @@ M.ignore_file = vim.fn.stdpath("config") .. "/spell/ignore.utf-8.add"
 
 function M.load_ignore_list()
     if vim.fn.filereadable(M.ignore_file) == 1 then
+        vim.opt.spellfile = M.ignore_file
         local lines = vim.fn.readfile(M.ignore_file)
         for _, word in ipairs(lines) do
             vim.cmd("spellgood " .. word)
@@ -32,7 +33,7 @@ function M.setup()
 
     vim.keymap.set("n", "zd", M.delete_word_from_spell, { noremap = true, silent = true })
     vim.keymap.set("n", "zg", M.add_word_auto, { noremap = true, silent = true })
-    vim.keymap.set("n", "zi", M.add_word_to_ignore, { noremap = true, silent = true })
+    vim.keymap.set("n", "<leader>si", M.add_word_to_ignore, { noremap = true, silent = true })
 end
 
 function M.delete_word_from_spell()
@@ -40,6 +41,7 @@ function M.delete_word_from_spell()
     for _, lang in ipairs(vim.opt.spelllang:get()) do
         local addfile = vim.fn.stdpath("config") .. "/spell/" .. lang .. ".utf-8.add"
         if vim.fn.filereadable(addfile) == 1 then
+            vim.opt.spellfile = addfile
             local lines = vim.fn.readfile(addfile)
             local new_lines = {}
             for _, l in ipairs(lines) do
@@ -77,6 +79,7 @@ function M.add_word_auto()
     end
     local lang = detect_language(word)
     local addfile = vim.fn.stdpath("config") .. "/spell/" .. lang .. ".utf-8.add"
+    vim.opt.spellfile = addfile
     vim.cmd("spellgood " .. word)
     vim.cmd("mkspell! " .. addfile)
     vim.o.spell = true
