@@ -103,7 +103,7 @@ function M.delete_word()
   end
 end
 
--- Додавання слова у "чорний список"
+-- Додавання слова у "чорний список", який не підсвічується
 function M.ignore_word()
   local word = vim.fn.expand("<cWORD>")
   if not word or word == "" then
@@ -128,7 +128,19 @@ function M.ignore_word()
   if not exists then
     table.insert(lines, word)
     vim.fn.writefile(lines, fpath)
-    vim.cmd("silent! mkspell! " .. vim.fn.fnameescape(fpath))
+
+    -- Додаємо файл у spellfile, якщо ще не додано
+    local fpath_escaped = vim.fn.fnameescape(fpath)
+    if not vim.o.spellfile:find(fpath_escaped, 1, true) then
+      vim.o.spellfile = vim.o.spellfile .. "," .. fpath
+    end
+
+    -- Робимо mkspell для Neovim
+    vim.cmd("silent! mkspell! " .. fpath_escaped)
+
+    -- Позначаємо слово як "правильне"
+    vim.cmd("spellgood! " .. word)
+
     print('Слово "' .. word .. '" додано у чорний список (' .. fpath .. ')')
   else
     print('Слово "' .. word .. '" вже у чорному списку')
