@@ -31,7 +31,8 @@ end
 
 --- Видалити слово під курсором з усіх відповідних add-файлів
 function M.delete_word()
-  local word = vim.fn.expand("<cword>")
+  -- local word = vim.fn.expand("<cword>")
+  local word = vim.fn.expand("<cWORD>")
   if not word or word == "" then
     print("Немає слова під курсором")
     return
