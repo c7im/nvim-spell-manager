@@ -1,4 +1,4 @@
-# nvim-lammps-syntax (Spellcycle plugin)
+# nvim-spell-manager
 
 Neovim plugin to **cycle spellcheck languages** and **remove words from spellfiles**.
 
@@ -9,30 +9,19 @@ Neovim plugin to **cycle spellcheck languages** and **remove words from spellfil
 
 ## 📦 Installation
 
-Using [lazy.nvim](https://github.com/folke/lazy.nvim):
+With [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
 {
-  "c7im/nvim-lammps-syntax",
-  config = function()
-    require("spellcycle").setup()
-  end
-}
-```
-
-Using [packer.nvim](https://github.com/wbthomason/packer.nvim):
-
-```lua
-use {
-  "c7im/nvim-lammps-syntax",
-  config = function()
-    require("spellcycle").setup()
-  end
+    "c7im/nvim-spell-manager",
+    config = function()
+        require("spell_manager").setup()
+    end
 }
 ```
 
 ## ⚡ Usage
-- `<F7>` → cycle through `{ "en_us", "ru" } → OFF → { "en_us", "uk" }`
+- `<F7>` → cycle `{ "en_us", "ru" } → OFF → { "en_us", "uk" }`
 - `zd` → delete word under cursor from all active spellfiles
 
 ## 📜 License
