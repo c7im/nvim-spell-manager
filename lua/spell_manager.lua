@@ -9,6 +9,7 @@ local default_modes = {
 local current = 0
 local modes = default_modes
 local DEBUG = false
+local ignore_file = vim.fn.stdpath("config") .. "/spell/ignored_words.add"
 
 local function expand_path(p)
   if not p or p == "" then return nil end
@@ -63,11 +64,6 @@ function M.delete_word()
 
   candidates = unique(candidates)
 
-  if DEBUG then
-    print("spell_manager: перевіряю кандидати файлів для видалення слова '" .. word .. "':")
-    for _, c in ipairs(candidates) do print("  -> " .. c) end
-  end
-
   local removed_any = false
   local tried_any = false
 
@@ -90,19 +86,12 @@ function M.delete_word()
         removed_any = true
         vim.fn.writefile(new_lines, addfile)
         vim.cmd("silent! mkspell! " .. vim.fn.fnameescape(addfile))
-        if DEBUG then
-          print("spell_manager: видалено з " .. addfile)
-        end
-      else
-        if DEBUG then
-          print("spell_manager: не знайдено у " .. addfile)
-        end
       end
     end
   end
 
   if not tried_any and not removed_any then
-    print('spell_manager: не знайдено жодного add-файлу для перевірки (перевірте &spellfile та ~/.config/nvim/spell/ )')
+    print('spell_manager: не знайдено жодного add-файлу для перевірки')
     return
   end
 
@@ -111,6 +100,38 @@ function M.delete_word()
     print('Слово "' .. word .. '" видалено зі словника(ів)')
   else
     print('Слово "' .. word .. '" не знайдено у активних словниках')
+  end
+end
+
+-- Додавання слова у "чорний список"
+function M.ignore_word()
+  local word = vim.fn.expand("<cWORD>")
+  if not word or word == "" then
+    print("Немає слова під курсором")
+    return
+  end
+
+  local fpath = expand_path(ignore_file)
+  local lines = {}
+  if vim.fn.filereadable(fpath) == 1 then
+    lines = vim.fn.readfile(fpath)
+  end
+
+  local exists = false
+  for _, l in ipairs(lines) do
+    if l:lower() == word:lower() then
+      exists = true
+      break
+    end
+  end
+
+  if not exists then
+    table.insert(lines, word)
+    vim.fn.writefile(lines, fpath)
+    vim.cmd("silent! mkspell! " .. vim.fn.fnameescape(fpath))
+    print('Слово "' .. word .. '" додано у чорний список (' .. fpath .. ')')
+  else
+    print('Слово "' .. word .. '" вже у чорному списку')
   end
 end
 
@@ -131,13 +152,16 @@ end
 function M.setup(opts)
   opts = opts or {}
   modes = opts.modes or default_modes
+  ignore_file = opts.ignore_file or ignore_file
+  DEBUG = opts.debug or false
 
   local key_cycle = opts.key_cycle or "<F7>"
   local key_delete = opts.key_delete or "zd"
-  DEBUG = opts.debug or false
+  local key_ignore = opts.key_ignore or "zi"
 
   vim.keymap.set("n", key_cycle, M.cycle_spell, { desc = "Cycle spellcheck languages" })
   vim.keymap.set("n", key_delete, M.delete_word, { noremap = true, silent = true, desc = "Delete word from spellfile(s)" })
+  vim.keymap.set("n", key_ignore, M.ignore_word, { noremap = true, silent = true, desc = "Add word to ignore list" })
 end
 
 return M

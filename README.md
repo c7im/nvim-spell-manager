@@ -1,3 +1,2 @@
 # nvim-spell-manager
-
-Neovim plugin для керування словником.
+Neovim plugin з функціями zd та zi.
