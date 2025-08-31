@@ -1,7 +1,5 @@
--- lua/spell_manager.lua
 local M = {}
 
--- За замовчуванням список конфігів spelllang
 local default_modes = {
   { "en_us", "ru" },
   {}, -- OFF
@@ -29,17 +27,13 @@ local function unique(tbl)
   return out
 end
 
---- Видалити слово під курсором з усіх відповідних add-файлів
 function M.delete_word()
-  -- local word = vim.fn.expand("<cword>")
   local word = vim.fn.expand("<cWORD>")
   if not word or word == "" then
     print("Немає слова під курсором")
     return
   end
 
-  -- Зібрати кандидати файлів:
-  -- 1) файли з &spellfile (можуть бути через кому)
   local candidates = {}
   local spellfile_opt = vim.o.spellfile or ""
   if spellfile_opt ~= "" then
@@ -49,25 +43,20 @@ function M.delete_word()
     end
   end
 
-  -- 2) для кожної мови з spelllang пробуємо кілька варіантів імені add-файлу
   local langs = vim.opt.spelllang:get() or {}
   for _, lang in ipairs(langs) do
     if lang and lang ~= "" then
       local l = tostring(lang):lower():gsub("%s+", "")
       l = l:gsub("-", "_")
-      -- as-is
       table.insert(candidates, vim.fn.stdpath("config") .. "/spell/" .. l .. ".utf-8.add")
-      -- short prefix (en_us -> en)
       local short = l:match("^([a-z][a-z])")
       if short then
         table.insert(candidates, vim.fn.stdpath("config") .. "/spell/" .. short .. ".utf-8.add")
       end
-      -- also try replacing '_' -> '-'
       table.insert(candidates, vim.fn.stdpath("config") .. "/spell/" .. l:gsub("_", "-") .. ".utf-8.add")
     end
   end
 
-  -- 3) додаткові загальні варіанти (пробуємо en, uk, ru якщо ще немає)
   table.insert(candidates, vim.fn.stdpath("config") .. "/spell/en.utf-8.add")
   table.insert(candidates, vim.fn.stdpath("config") .. "/spell/uk.utf-8.add")
   table.insert(candidates, vim.fn.stdpath("config") .. "/spell/ru.utf-8.add")
@@ -89,9 +78,8 @@ function M.delete_word()
       local new_lines = {}
       local removed_here = false
       for _, l in ipairs(lines) do
-        -- trim кінцеві пробіли/символи нового рядка
         local trimmed = l:gsub("%s+$", "")
-        if trimmed ~= word then
+        if trimmed:lower() ~= word:lower() then
           table.insert(new_lines, l)
         else
           removed_here = true
@@ -100,24 +88,15 @@ function M.delete_word()
 
       if removed_here then
         removed_any = true
-        -- запишемо новий add-файл (збережемо формат рядків)
         vim.fn.writefile(new_lines, addfile)
-        -- згенеруємо .spl для цього add-файлу
-        -- mkspell! приймає ім'я .add файлу як аргумент
         vim.cmd("silent! mkspell! " .. vim.fn.fnameescape(addfile))
         if DEBUG then
           print("spell_manager: видалено з " .. addfile)
         end
-        -- не припиняємо — слово могло бути в декількох add-файлах
       else
         if DEBUG then
           print("spell_manager: не знайдено у " .. addfile)
         end
-      end
-    else
-      if DEBUG then
-        -- ми не логаємо всі неіснуючі файли у звичайному режимі
-        --print("spell_manager: файл не існує: " .. addfile)
       end
     end
   end
@@ -128,7 +107,6 @@ function M.delete_word()
   end
 
   if removed_any then
-    -- переконаємось, що spell увімкнений (щоб оновлення застосувалось)
     vim.o.spell = true
     print('Слово "' .. word .. '" видалено зі словника(ів)')
   else
@@ -136,7 +114,6 @@ function M.delete_word()
   end
 end
 
---- Перемикання режимів перевірки орфографії
 function M.cycle_spell()
   current = current % #modes + 1
   local langs = modes[current] or {}
@@ -151,8 +128,6 @@ function M.cycle_spell()
   end
 end
 
---- Налаштування плагіна
---- @param opts table|nil { modes = {...}, key_cycle = "<F7>", key_delete = "zd", debug = false }
 function M.setup(opts)
   opts = opts or {}
   modes = opts.modes or default_modes
@@ -166,4 +141,3 @@ function M.setup(opts)
 end
 
 return M
-
